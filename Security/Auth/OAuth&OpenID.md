@@ -24,4 +24,16 @@ OAuth 2.0 defines two client types,
 So the reason this distinction matters is that the authorization server might have different policies that make it act differently depending on the type of client making
 the request. For example, a confidential client that is also a first party app might have the consent screen skipped when it starts a flow because the authorization server can be sure that only the real application can actually complete that flow and end up with an access token. However, for a first party public client, an attacker could mimic that application by copying its client ID and starting a flow. And if they can control the redirect URL they could end up with access tokens of the authorization server thought were being delivered to the real application. So in that case, you may want to still include the content screen to get the user involved in that flow. Some of the other things the authorization server might do differently, depending on the client type, is things like whether to include refresh tokens or changing the token lifetimes to mitigate risk. All of these things are reasons to use client authentication when possible.
 
+## OAUth for Server Side Apps
+
+- First Step is to register an application with the OAuth server and have a client ID and secret.
+- Flow :
+  1. The flow starts out with the user clicking the login button. That's like the user saying, I would like to use this application.
+  2. Before the app redirects the user, it makes up a new secret for this particular flow. This is not the client secret. This is a random string the app      generates and it's different every time it starts to flow. This is called the PKCE Code Verifier.
+  3. So the app holds onto that code verifier in the app's server and then calculates a hash of it called the Code Challenge. And a hash, of course, is a one way operation. So somebody knows the hashed value. They can't reverse engineer it and figure out the secret. So it takes that hash and includes it in that URL, which it builds to send the browser over to the server.
+  4. It'll redirect the user to the server with a bunch of stuff in the query string, including that hash, the client ID, redirect URL, and scope. So the user ends up at the server delivering the message the app sent.
+  5. So the user is now at the OAuth server and the server asks them to log in, they log in,they do any sort of multifactor auth necessary, and then that server asks them to confirm if they really are trying to log into the app. If they say, yes, the server needs to send the user back to the app and also deliver this temporary one time use authorization code.
+  6. So it takes the app's redirect URI, adds the authorization code in the query string and then sends the user's browser there to deliver that back to the app.
+  7. The backedn App can now ue the authorization code with client id and secret to get the access token from the auth server.
+
 
