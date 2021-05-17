@@ -36,4 +36,36 @@ the request. For example, a confidential client that is also a first party app m
   6. So it takes the app's redirect URI, adds the authorization code in the query string and then sends the user's browser there to deliver that back to the app.
   7. The backedn App can now ue the authorization code with client id and secret to get the access token from the auth server.
 
+## OAUth for Native/Mobile Apps
 
+Since Native/Mobile Apps have public clients. When you're building a native app, remember that you don't have a way to deploy any credentials if you're shipping it in an app store. So when we register a app with a auth server and a option is given to choose whether it is a public or confidential client, for Public client a Client Secret is not generated.
+FLow starts like this :
+
+**Message 1 (Front Channel)**
+1. The user clicking the login button and that's the user saying, I would like to use this application.
+2. Before the app redirects the user (to the auth server), it makes up a new secret for this particular flow. This is not the client secret. This is a random string the app generates and it's different every time it starts to flow. This is called the PKCE Code Verifier.
+3. It holds on to that code verifier in the app itself. Then it calculates a hash called the code challenge. And a hash, of course, is a one way operation. So somebody knows the hashed value. They can't reverse engineer and figure out the original secret.
+4. So it takes that hash and it includes it in the URL that it builds, which tells the browser to go to the OAuth server. Query Parameters will include
+    1. With Client-ID, 
+    2. Code-Challenge, 
+    3. Response_typ=code (telling the server it is the authorization code flow)
+    4. State Value - random string that should be matched when a response is retunred from the Auth Server
+5. Now, instead of a redirect, the app launches a new in-app browser to get the user to the server with all that stuff in the query string, including that hash, it also includes the client ID, redirect URL and scope.
+6. So the user ends up at the OAuth server, which is delivering this message the app sent.
+
+So what's actually really happening here is the app is trying to request some stuff from the server, but instead of requesting it directly, it hands its request to the user to deliver to the OAuth server. And because this is a front channel request, that's the reason it sends only a hash of the secret rather than sending the secret itself. Now, in the case of a mobile app, it's a little bit easier to understand the front channel risks here as well. 
+The backchannel is when the app makes a request from code within the app directly to the server. The front channel is when the app makes a request through the system browser to the server, which means that request leaves the little walled garden of the app and is more exposed. 
+
+**Message 2(Front Channel)**
+1. Ok, so the user is now at the server and the server asks them to log in.
+2. They log in, they do any sort of multifactor auth, and one of the neat things here about using the in-app browser (that's in Android, Chrome Custom Tabs or SFSafariViewController on iOS) is that because this browser is actually isolated from the app, it can share cookies with the rest of the system, meaning if the user's already logged into the server in their native browser when this in-app browser pops up, they might already be logged in as well, because it can share cookies with the rest of the system.
+3. Ok, so then the OAuth server asks the user to confirm they're trying to log in to this application. And if they say yes, the server needs to send the user back to the app and also deliver this temporary authorization code. So it takes the redirect URI, adds the authorization code in the query string and also includes the state Value and then sends the user's browser there to deliver that back to the app. 
+4. And again, because this is a front channel request, the server can't really be sure that the code was received by the application. So this authorization code is valid for only one use and it has to be redeemed within a short period of time, typically under a minute.
+
+**Message 3(Back Channel)**
+1. So now that the application has the authorization code, it can go make a back channel request to exchange that for an access token.
+2. This request is made from the app's code to the OAuth server (Back Channel).
+3. Now, the app still doesn't have a client secret, but it does have the plaintext secret it generated at the beginning. The server looks in that request and says, ok, I see that I just issued this code, it hasn't been used yet, and it was intended for this client. And when this request started, I saw this hash value, the code challenge. So the OAuth server calculates the hash of the code verifier in the request, compares the hashes and if they match then the server knows the thing redeeming this code is the same thing that started the flow.
+4. And then the OAuth server generates the access token and returns it in the response, and then the flow is done and the app can go make API requests with that access token.
+5. So this step of doing that hash is the PKCE extension.
+And PKCE was originally developed for mobile apps to protect the authorization code flow because there is no client secret. And it turns out that PKCE also protects against some other specific attacks, even if you do have a client secret. So the latest recommendations from the OAuth group are for all applications to use PKCE even if you already have a client secret.
