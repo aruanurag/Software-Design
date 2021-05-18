@@ -69,3 +69,9 @@ The backchannel is when the app makes a request from code within the app directl
 4. And then the OAuth server generates the access token and returns it in the response, and then the flow is done and the app can go make API requests with that access token.
 5. So this step of doing that hash is the PKCE extension.
 And PKCE was originally developed for mobile apps to protect the authorization code flow because there is no client secret. And it turns out that PKCE also protects against some other specific attacks, even if you do have a client secret. So the latest recommendations from the OAuth group are for all applications to use PKCE even if you already have a client secret.
+
+
+## Refresh Tokens
+Refresh tokens are special tokens whose only job is to get new access tokens. The thing that makes them special is the app is able to use them without getting the user involved. Essentially, these are used to keep the user logged in while also letting access tokens last for a shorter time.
+Some OAuth servers always return Refresh_tokens. There is a convention to use **scope=offline_access** to get a refresh token.
+If the app receives a refresh token, it will be at the same time it gets the access token, returned in the response alongside the access token. If the app sees the access token is about to expire, it can go use the refresh token to get a new one first. Using the refresh token is actually a very simple POST request to the OAuth server's token endpoint. This is the same endpoint that the app requested the first access token from using the authorization code. The post includes **grant_type=refresh_token**, the refresh token itself and the app's client ID. There's no client secret here because native apps don't get client secrets.
