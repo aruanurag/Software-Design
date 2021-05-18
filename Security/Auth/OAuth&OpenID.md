@@ -36,7 +36,7 @@ the request. For example, a confidential client that is also a first party app m
   6. So it takes the app's redirect URI, adds the authorization code in the query string and then sends the user's browser there to deliver that back to the app.
   7. The backedn App can now ue the authorization code with client id and secret to get the access token from the auth server.
 
-## OAUth for Native/Mobile Apps
+## OAUth for Native/Mobile/SPA Apps
 
 Since Native/Mobile Apps have public clients. When you're building a native app, remember that you don't have a way to deploy any credentials if you're shipping it in an app store. So when we register a app with a auth server and a option is given to choose whether it is a public or confidential client, for Public client a Client Secret is not generated.
 FLow starts like this :
