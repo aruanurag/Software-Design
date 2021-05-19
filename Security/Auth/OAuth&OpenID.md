@@ -110,6 +110,8 @@ So the next step is to actually validate the signature. Now for this, you'll def
 
 If your APIs are validating tokens by doing only this local validation method, then what you're actually doing is you're checking the access token was valid at the time it was issued, and there are plenty of ways an access token might become invalid after it was issued, but before the token was scheduled to expire. This might include anything from the user account being deleted to the administrator deleting the application. It could also be that a user was reassigned to a different group. So what local validation tells you is that this token was valid at the time it was issued. So if your tokens to contain any additional data like the groups the user is in, that may have changed already as well.
 
+**ref:** https://medium.com/dataseries/public-claims-and-how-to-validate-a-jwt-1d6c81823826
+
 **Best of Both Worlds** i.e. slow method and the fast method
 
 It'd be nice to take advantage of the performance boost that local validation gives us, but also the stronger security of remote introspection. So let's take a look at one way to accomplish this, and that's to use an API gateway. So let's start with an API gateway out in front of all of your backend APIs.
