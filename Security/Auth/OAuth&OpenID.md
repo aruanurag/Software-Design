@@ -107,3 +107,5 @@ There might be one or two keys here depending on the server. One of the properti
 The rest of this is the actual public key itself.
 
 So the next step is to actually validate the signature. Now for this, you'll definitely want to find a JSON Web Token library because you should never write cryptography code by hand. So you take your JSON Web Token access token and the key, and hand it to this library and it will tell you if the signature is valid.
+
+If your APIs are validating tokens by doing only this local validation method, then what you're actually doing is you're checking the access token was valid at the time it was issued, and there are plenty of ways an access token might become invalid after it was issued, but before the token was scheduled to expire. This might include anything from the user account being deleted to the administrator deleting the application. It could also be that a user was reassigned to a different group. So what local validation tells you is that this token was valid at the time it was issued. So if your tokens to contain any additional data like the groups the user is in, that may have changed already as well.
